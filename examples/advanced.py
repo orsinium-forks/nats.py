@@ -2,26 +2,35 @@ import asyncio
 import nats
 from nats.aio.errors import ErrTimeout, ErrNoServers
 
-async def run():
+
+async def main():
     try:
         # Setting explicit list of servers in a cluster.
-        nc = await nats.connect(servers=["nats://127.0.0.1:4222", "nats://127.0.0.1:4223", "nats://127.0.0.1:4224"])
+        nc = await nats.connect(
+            servers=[
+                "nats://127.0.0.1:4222", "nats://127.0.0.1:4223",
+                "nats://127.0.0.1:4224"
+            ]
+        )
     except ErrNoServers as e:
         print(e)
         return
 
-    async def message_handler(msg):
+    async def message_handler(msg: nats.Msg) -> None:
         print("Request :", msg)
         await nc.publish(msg.reply, b"I can help!")
 
     await nc.subscribe("help.>", cb=message_handler)
 
-    async def request_handler(msg):
+    async def request_handler(msg: nats.Msg) -> None:
         subject = msg.subject
         reply = msg.reply
         data = msg.data.decode()
-        print("Received a message on '{subject} {reply}': {data}".format(
-            subject=subject, reply=reply, data=data))
+        print(
+            "Received a message on '{subject} {reply}': {data}".format(
+                subject=subject, reply=reply, data=data
+            )
+        )
 
     # Signal the server to stop sending messages after we got 10 already.
     resp = await nc.request("help.please", b'help')
@@ -40,7 +49,6 @@ async def run():
     # handle any pending messages inflight that the server may have sent.
     await nc.drain()
 
+
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run())
-    loop.close()
+    asyncio.run(main())

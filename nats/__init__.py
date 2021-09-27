@@ -12,11 +12,19 @@
 # limitations under the License.
 #
 
-import asyncio
+from typing import Any, List
+
 from .aio.client import Client as NATS
+from .aio.messages import Msg
+from .aio.subscriptions import Subscription
 
 
-async def connect(servers=["nats://localhost:4222"], **options) -> NATS:
+async def connect(
+    servers: List[str] = ["nats://localhost:4222"], **options: Any
+) -> NATS:
     nc = NATS()
     await nc.connect(servers, **options)
     return nc
+
+
+__all__ = ["NATS", "Msg", "Subscription"]

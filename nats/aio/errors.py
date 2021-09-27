@@ -13,6 +13,10 @@
 #
 
 import asyncio
+from typing import TYPE_CHECKING, Optional, Union
+
+if TYPE_CHECKING:
+    from nats.aio.subscriptions import Subscription
 
 STALE_CONNECTION = b"'Stale Connection'"
 AUTHORIZATION_VIOLATION = b"'Authorization Violation'"
@@ -54,9 +58,10 @@ class ErrBadSubject(NatsError):
 
 
 class ErrSlowConsumer(NatsError):
-    def __init__(self, subject=None, sid=None):
-        self.subject = subject
-        self.sid = sid
+    def __init__(self, sub: "Subscription" = None):
+        self.sub = sub
+        self.subject = sub._subject if sub else None
+        self.sid = sub._id if sub else None
 
     def __str__(self):
         return "nats: Slow Consumer, messages dropped"
@@ -120,3 +125,31 @@ class ErrInvalidUserCredentials(NatsError):
 class ErrInvalidCallbackType(NatsError):
     def __str__(self):
         return "nats: Callbacks must be coroutine functions"
+
+
+class ErrNoResponder(NatsError):
+    def __str__(self):
+        return "nats: No responder available for request"
+
+
+class JetStreamError(NatsError):
+    def __str__(self):
+        return "nats: JetStream Error"
+
+
+class JetStreamAPIError(NatsError):
+    def __init__(
+        self,
+        code: Union[str, int, None] = None,
+        description: Optional[str] = None
+    ):
+        self.code = int(code) if code is not None else code
+        self.description = description
+
+    def __str__(self):
+        return f"nats: JetStream API Error: code='{self.code}' description='{self.description}'"
+
+
+class ErrNotJSMessage(JetStreamError):
+    def __str__(self):
+        return "nats: not a JetStream message"

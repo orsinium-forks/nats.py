@@ -1,56 +1,51 @@
 import asyncio
-from nats.aio.client import Client as NATS
-from nats.aio.errors import ErrConnectionClosed, ErrTimeout, ErrNoServers
+from nats import NATS, Msg
+from nats.aio.errors import ErrTimeout
 
-async def run(loop):
+
+async def main():
     nc = NATS()
 
     # It is very likely that the demo server will see traffic from clients other than yours.
     # To avoid this, start your own locally and modify the example to use it.
-    # await nc.connect("nats://127.0.0.1:4222", loop=loop)
-    await nc.connect("nats://demo.nats.io:4222", loop=loop)
+    # await nc.connect("nats://127.0.0.1:4222")
+    await nc.connect("nats://demo.nats.io:4222")
 
-    async def message_handler(msg):
+    async def message_handler(msg: Msg) -> None:
         subject = msg.subject
         reply = msg.reply
         data = msg.data.decode()
-        print("Received a message on '{subject} {reply}': {data}".format(
-            subject=subject, reply=reply, data=data))
+        print(
+            "Received a message on '{subject} {reply}': {data}".format(
+                subject=subject, reply=reply, data=data
+            )
+        )
 
-    # Simple publisher and async subscriber via coroutine.
-    sid = await nc.subscribe("foo", cb=message_handler)
+    # Simple publisher and async subscriber via coroutine. Stop receiving after 2 messages.
+    sub = await nc.subscribe("foo", cb=message_handler, max_msgs=2)
 
-    # Stop receiving after 2 messages.
-    await nc.auto_unsubscribe(sid, 2)
     await nc.publish("foo", b'Hello')
     await nc.publish("foo", b'World')
+    # Will not be received
     await nc.publish("foo", b'!!!!!')
 
-    async def help_request(msg):
+    async def help_request(msg: Msg) -> None:
         subject = msg.subject
         reply = msg.reply
         data = msg.data.decode()
-        print("Received a message on '{subject} {reply}': {data}".format(
-            subject=subject, reply=reply, data=data))
+        print(
+            "Received a message on '{subject} {reply}': {data}".format(
+                subject=subject, reply=reply, data=data
+            )
+        )
         await nc.publish(reply, b'I can help')
 
     # Use queue named 'workers' for distributing requests
     # among subscribers.
-    sid = await nc.subscribe("help", "workers", help_request)
+    sub = await nc.subscribe("help", "workers", help_request)
 
-    async def drain_sub():
-        nonlocal sid
-        nonlocal nc
-        await asyncio.sleep(0.001)
-
-        print("Start draining subscription...")
-        drain_task = await nc.drain(sid=sid)
-        try:
-            await asyncio.wait_for(drain_task, 2)
-        except asyncio.TimeoutError:
-            print("Took too long to drain subscription!")
-
-    loop.create_task(drain_sub())
+    # Drain the subscription
+    await sub.drain()
 
     # Send multiple requests and drain the subscription.
     requests = []
@@ -65,15 +60,18 @@ async def run(loop):
         print("Received {count} responses!".format(count=len(responses)))
 
         for response in responses[:5]:
-            print("Received response: {message}".format(
-                message=response.data.decode()))
-    except:
+            print(
+                "Received response: {message}".format(
+                    message=response.data.decode()
+                )
+            )
+    except ErrTimeout:
         pass
 
+    await sub.drain()
     # Terminate connection to NATS.
     await nc.close()
 
+
 if __name__ == '__main__':
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(run(loop))
-    loop.close()
+    asyncio.run(main())
