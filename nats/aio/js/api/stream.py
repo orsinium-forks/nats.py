@@ -139,14 +139,13 @@ class StreamAPI:
             no_ack=no_ack,
             **kwargs,
         )
-        await self._js._request(
+        return await self._js._request(
             f"STREAM.CREATE.{name}",
             options,
             request_dc=StreamCreateRequest,
-            response_dc=StreamInfoResponse,
+            response_dc=StreamCreateResponse,
             timeout=timeout,
         )
-        return await self.info(name)
 
     async def info(
         self,

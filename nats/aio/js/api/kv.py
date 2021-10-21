@@ -5,8 +5,7 @@ from nats.aio.errors import JetStreamAPIError
 from nats.aio.js.models.consumers import AckPolicy, DeliverPolicy, ReplayPolicy
 from nats.aio.js.models.messages import Message
 from nats.aio.js.models.streams import (
-    PubAck, Retention, Storage, StreamDeleteResponse, StreamInfoResponse,
-    StreamMsgGetResponse
+    PubAck, Retention, Storage, StreamCreateResponse, StreamDeleteResponse, StreamMsgGetResponse
 )
 from nats.aio.messages import Msg
 
@@ -28,7 +27,7 @@ class KeyValueAPI:
         duplicate_window: int = 0,
         replicas: int = 1,
         timeout: float = 1,
-    ) -> StreamInfoResponse:
+    ) -> StreamCreateResponse:
         """Add a new KV store (bucket).
 
         Args:
