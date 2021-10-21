@@ -33,7 +33,7 @@ class ConsumerAPI:
             * `stream`: Name of the stream
             * `name`: Name of the durable consumer
             * `timeout`: timeout to wait before raising a TimeoutError.
-    
+
         Returns:
             A `ConsumerInfoResponse`.
         """
@@ -55,7 +55,7 @@ class ConsumerAPI:
             * `stream`: Name of the stream.
             * `offset`: Number of consumers to skip.
             * `timeout`: timeout to wait before raising a TimeoutError.
-    
+
         Returns:
             A `ConsumerListResponse`. List of consumer info is available under `.consumers` attribute.
         """
@@ -126,10 +126,12 @@ class ConsumerAPI:
         Args:
             * `stream`: Name of the stream
             * `name`: Name of durable consumer. Must be empty for an epheral consumer.
-            * `deliver_subject`: Subject on which messages will be delivered. Use None for pull consumers. Value cannot be None when consumer is ephemeral.
+            * `deliver_subject`: Subject on which messages will be delivered. Use None for pull consumers.
+              Value cannot be None when consumer is ephemeral.
             * `deliver_group`:
             * `deliver_policy`: One of "all", "last", "new", "last_per_subject", "by_start_sequence", "by_start_time".
-            * `replay_policy`: One of "instant", "original". Applies when deliver_policy is one of "all", "by_start_sequence", "by_start_time".
+            * `replay_policy`: One of "instant", "original". Applies when deliver_policy is one of
+              "all", "by_start_sequence", "by_start_time".
             * `ack_policy`: One of None, "all", "explicit". Defines how messages should be acknowledged
 
         Returns:
@@ -202,7 +204,8 @@ class ConsumerAPI:
         * If `no_wait` is True and no messages are found in stream, a `JetStreamAPIError` with code 404 is raised.
         * If `no_wait` is False, iterator waits for next message for `timeout` seconds.
         * If `timeout` is None, iterator waits for next message forever.
-        * If `auto_ack` is True, messages will be acknowledged before being yielded by iterator. If False, messages might need to be acked manually.
+        * If `auto_ack` is True, messages will be acknowledged before being yielded by iterator.
+          If False, messages might need to be acked manually.
         * If `max_msgs` is set, iterator will break after having received `max_msgs` messages
 
         Example usage:
@@ -304,7 +307,8 @@ class ConsumerAPI:
         * If stream is not found, a `JetStreamAPIError` with code 404 is raised.
         * If `no_wait` is True and no message is available, a `JetStreamAPIError` with code 404 is raised.
         * If `timeout` is set and no message is received before `timeout` seconds, a `TimeoutError` is raised.
-        * If `auto_ack` is True, messages are acknowledged automatically. If False messages might need to be acknowledged manually.
+        * If `auto_ack` is True, messages are acknowledged automatically.
+          If False messages might need to be acknowledged manually.
 
         Example usage:
             >>> msg = await js.consumer.next_msg("CON", subject="foo")
@@ -321,7 +325,8 @@ class ConsumerAPI:
         ):
             # Return on first message
             return msg
-        # This code should never be reached, because either an error is raised or a message is yielded by pull_msgs method.
+        # This code should never be reached, because either an error is raised
+        # or a message is yielded by pull_msgs method.
         raise JetStreamAPIError(  # pragma: no cover
             code="500", description="Something's wrong"
         )
