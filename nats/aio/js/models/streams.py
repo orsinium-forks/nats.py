@@ -116,6 +116,10 @@ class StreamConfig:
     placement: Optional[Placement] = None
     mirror: Optional[Mirror] = None
     sources: Optional[List[Source]] = None
+    sealed: Optional[bool] = None
+    deny_delete: Optional[bool] = None
+    deny_purge: Optional[bool] = None
+    allow_rollup_hdrs: Optional[bool] = None
 
     def __post_init__(self):
         if isinstance(self.placement, dict):
